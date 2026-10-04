@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>超・野球育成シミュレーター</title>
+  
+  <!-- PWA・ホーム画面アイコン設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="野球育成">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 1. タイトル画面 -->
+  <div id="title-screen" class="screen active" style="background: radial-gradient(circle at center, #1b2838 0%, #0d1117 100%);">
+    <div style="border: 2px solid var(--accent-color); padding: 30px 20px; border-radius: 16px; background: rgba(30, 30, 30, 0.85); box-shadow: 0 8px 32px rgba(0,0,0,0.6); width: 90%; max-width: 400px; text-align: center;">
+      <div style="font-size: 12px; letter-spacing: 2px; color: var(--accent-color); font-weight: bold; margin-bottom: 8px;">⚾ BASEBALL CAREER SIMULATOR</div>
+      <h1 style="font-size: 22px; color: #fff; margin-bottom: 12px; line-height: 1.4;">
+        限界突破！<br><span style="color: var(--accent-color);">超・野球育成シミュレーター</span>
+      </h1>
+      <p style="font-size: 12px; color: var(--sub-text); margin-bottom: 25px; line-height: 1.5;">
+        5年間の軌跡。最強の選手を育て上げ、<br>名門野球部を築き上げろ！
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="btn-primary" style="width: 100%; padding: 16px;" onclick="startGame()">▶ ゲームスタート</button>
+        <button class="btn-sm" style="width: 100%; padding: 12px; background: #333; border: 1px solid #555;" onclick="alert('セーブ機能は自動で保持されるであります！')">📁 続きから</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- メインゲーム画面群 -->
+  <div id="game-main" class="screen">
+    <header style="display: flex; justify-content: space-between; align-items: center; background: #161b22; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #30363d;">
+      <div>
+        <span id="txt-year" style="font-weight: bold; color: var(--accent-color);">1年目</span> 
+        <span id="txt-month" style="font-weight: bold;">4月</span> 
+        <span id="txt-week" style="font-size: 12px; color: var(--sub-text);">第1週</span>
+      </div>
+      <div>
+        <span style="font-size: 12px; color: #ffd700;">💰 <span id="txt-points">1000</span> pt</span>
+      </div>
+    </header>
+
+    <!-- タブ1: チーム・選手名鑑 -->
+    <div id="tab-roster" class="game-tab active">
+      <h2 style="font-size: 16px; margin-bottom: 10px;">👥 所属選手名鑑</h2>
+      <div id="roster-list"></div>
+    </div>
+
+    <!-- タブ2: 派遣設定 -->
+    <div id="tab-dispatch" class="game-tab" style="display:none;">
+      <h2 style="font-size: 16px; margin-bottom: 6px;">✈️ リーグ派遣システム</h2>
+      <p id="dispatch-notice" style="font-size: 11px; margin-bottom: 10px;"></p>
+      <div style="font-size: 12px; margin-bottom: 10px; color: var(--sub-text);">派遣中人数: <span id="dispatch-count">0</span> / 10人</div>
+      <div id="dispatch-list"></div>
+    </div>
+
+    <!-- タブ3: メイン進行 -->
+    <div id="tab-progress" class="game-tab" style="display:none; text-align: center; padding-top: 30px;">
+      <div style="background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d;">
+        <h2 style="font-size: 18px; margin-bottom: 10px;">⏳ 育成の時</h2>
+        <p style="font-size: 12px; color: var(--sub-text); margin-bottom: 20px;">1週間を進め、選手たちの成長を見守るであります。</p>
+        <button class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="progressWeek()">▶ 1週間進める</button>
+      </div>
+    </div>
+
+    <!-- タブ4: 設定・BGM -->
+    <div id="tab-settings" class="game-tab" style="display:none;">
+      <h2 style="font-size: 16px; margin-bottom: 10px;">⚙️ 設定</h2>
+      <div style="background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333;">
+        <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px;">🎧 BGM カスタム設定</div>
+        <input type="file" accept="audio/*" id="bgm-file-input" style="font-size: 11px; color: #fff;" onchange="loadCustomBGM(event)">
+        <audio id="custom-bgm-player" loop style="width: 100%; margin-top: 8px; display: none;" controls></audio>
+      </div>
+    </div>
+
+    <nav>
+      <button onclick="switchTab('roster')" id="nav-roster" class="active">👥 名鑑</button>
+      <button onclick="switchTab('dispatch')" id="nav-dispatch">✈️ 派遣</button>
+      <button onclick="switchTab('progress')" id="nav-progress">⏳ 進行</button>
+      <button onclick="switchTab('settings')" id="nav-settings">⚙️ 設定</button>
+    </nav>
+  </div>
+
+  <!-- 月末リザルトモーダル -->
+  <div id="result-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="result-modal-title" style="font-size: 16px; color: #ffd700; margin-bottom: 10px; text-align: center;"></h3>
+      <div id="result-modal-body" style="margin-bottom: 15px;"></div>
+      <button class="btn-primary" style="width: 100%;" onclick="closeResultModal()">OK</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
